@@ -33,6 +33,8 @@ Citizen.CreateThread(function()
 
         for _, ped in ipairs(GetGamePool('CPed')) do
             if DoesEntityExist(ped) and not IsPedAPlayer(ped) and not IsPedInAnyVehicle(ped, false) and not IsEntityDead(ped) then
+                if not NetworkGetEntityIsNetworked(ped) then goto continue end
+
                 local pedNet = NetworkGetNetworkIdFromEntity(ped)
                 local dist = #(playerCoords - GetEntityCoords(ped))
 
@@ -42,6 +44,7 @@ Citizen.CreateThread(function()
                     break
                 end
             end
+            ::continue::
         end
 
         if nearPed and not selling then
@@ -73,7 +76,7 @@ Citizen.CreateThread(function()
                         selling = true
                         canSell = false
 
-                        local pedNet = NetworkGetNetworkIdFromEntity(nearPed)
+                        local pedNet = NetworkGetEntityIsNetworked(nearPed) and NetworkGetNetworkIdFromEntity(nearPed) or nil
                         FreezeEntityPosition(nearPed, true)
                         ClearPedTasks(nearPed)
 
@@ -89,7 +92,9 @@ Citizen.CreateThread(function()
                             StartPlayerEmote("mp_common", "givetake1_a", 1200)
                             TriggerServerEvent('takenncs-npcsell:sellItem', sellItem)
 
-                            recentlySold[pedNet] = true
+                            if pedNet then
+                                recentlySold[pedNet] = true
+                            end
 
                             ClearPedTasksImmediately(nearPed)
                             FreezeEntityPosition(nearPed, false)
