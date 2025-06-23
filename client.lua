@@ -64,7 +64,13 @@ Citizen.CreateThread(function()
                 showingSellPrompt = true
                 while nearPed and canSell do
                     Wait(0)
-                    DrawText3D(pedCoords + vector3(0, 0, 1.0), "[E] Müü")
+                    if nearPed and not IsEntityDead(nearPed) then
+                        DrawText3D(pedCoords + vector3(0, 0, 1.0), "[E] Müü")
+                    else
+                        canSell, sellItem = false, nil
+                        showingSellPrompt = false
+                        break
+                    end
 
                     if #(GetEntityCoords(PlayerPedId()) - pedCoords) > sellDistance then
                         canSell, sellItem = false, nil
@@ -122,10 +128,18 @@ Citizen.CreateThread(function()
             end
         else
             if lastSoldPedCoords and not showingSellPrompt then
-                if #(playerCoords - lastSoldPedCoords) > sellDistance then
-                    lastSoldPedCoords = nil
-                else
+                local pedAtCoords = nil
+                for _, ped in ipairs(GetGamePool('CPed')) do
+                    if #(GetEntityCoords(ped) - lastSoldPedCoords) < 1.0 and not IsEntityDead(ped) then
+                        pedAtCoords = ped
+                        break
+                    end
+                end
+
+                if pedAtCoords and #(playerCoords - lastSoldPedCoords) <= sellDistance then
                     DrawText3D(lastSoldPedCoords + vector3(0, 0, 1.0), "[E] Müü")
+                else
+                    lastSoldPedCoords = nil
                 end
             end
         end
